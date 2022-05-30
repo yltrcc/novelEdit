@@ -9,19 +9,23 @@
     <version>1.0-SNAPSHOT</version>
 
     <dependencies>
-        <!-- https://mvnrepository.com/artifact/org.fife.ui/rsyntaxtextarea -->
+        <!--&lt;!&ndash; https://mvnrepository.com/artifact/org.fife.ui/rsyntaxtextarea &ndash;&gt;
         <dependency>
             <groupId>org.fife.ui</groupId>
             <artifactId>rsyntaxtextarea</artifactId>
             <version>2.0.4.1</version>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/org.eclipse.platform/org.eclipse.swt.win32.win32.x86_64 -->
+        &lt;!&ndash; https://mvnrepository.com/artifact/org.eclipse.platform/org.eclipse.swt.win32.win32.x86_64 &ndash;&gt;
         <dependency>
             <groupId>org.eclipse.platform</groupId>
             <artifactId>org.eclipse.swt.win32.win32.x86_64</artifactId>
             <version>3.118.0</version>
+        </dependency>-->
+        <dependency>
+            <groupId>com.janeluo</groupId>
+            <artifactId>ikanalyzer</artifactId>
+            <version>2012_u6</version>
         </dependency>
-
 
     </dependencies>
 

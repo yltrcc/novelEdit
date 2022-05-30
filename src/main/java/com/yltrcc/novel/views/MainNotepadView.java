@@ -1,55 +1,37 @@
-package com.yltrcc.novel;
+package com.yltrcc.novel.views;
+
+import com.yltrcc.novel.constant.UIConstant;
+import com.yltrcc.novel.utils.AutoCompleteUtils;
 
 import java.awt.event.*;//加载图形界面下相应事件的包
 import java.awt.*;//加载图形界面设计要用的抽象窗口工具包
 import java.io.*;//加载系统输入输出包java.io中的所有类
 import java.awt.datatransfer.*;//提供一种剪贴板机制
+import java.util.ArrayList;
 import javax.swing.*;//加载图形界面设计要用的swing包
+import javax.swing.text.BadLocationException;
 
 /**
  * 文本编辑器-版本二
  */
-public class Notepad extends JFrame implements ActionListener {
+public class MainNotepadView extends JFrame implements ActionListener {
     JMenuBar menuBar = new JMenuBar();//菜单
-    /*窗体菜单大致由菜单栏、菜单和菜单项三部分组成，对于一个窗体，首先要添加一个JMenuBar,然后在JMenu中添加JMenultem*/
-    /*菜单栏*/
-    JMenu file = new JMenu("文件"),
-            edit = new JMenu("编辑"),
-            format = new JMenu("格式"),
-            view = new JMenu("查看"),
-            help = new JMenu("帮助");
-    /*菜单项*/
-    JMenuItem[] menuItem = {new JMenuItem("新建"), new JMenuItem("打开"),
-            new JMenuItem("保存"), new JMenuItem("退出"),
-            new JMenuItem("全选"), new JMenuItem("复制"),
-            new JMenuItem("剪切"), new JMenuItem("粘贴"),
-            new JMenuItem("查找"), new JMenuItem("替换"),
-            new JMenuItem("自动换行"), new JMenuItem("字体"),
-            new JMenuItem("普通"), new JMenuItem("粗体"),
-            new JMenuItem("斜体"), new JMenuItem("字号"),
-            new JMenuItem("12"), new JMenuItem("24"),
-            new JMenuItem("36"), new JMenuItem("颜色"),
-            new JMenuItem("背景"), new JMenuItem("状态栏"),
-            new JMenuItem("关于")
-    };
     //这是在JMenu中添加JMenuItem，JMenuItem是最小单元
-    private JTextArea textArea;
-    private JScrollPane js;
-    private JPanel jp;
-    private FileDialog openFileDialog;
-    private FileDialog saveFileDialog;
-    private Toolkit toolKit;
-    private Clipboard clipboard;
+    private final JTextArea textArea;
+    private final FileDialog openFileDialog;
+    private final FileDialog saveFileDialog;
+    private final Clipboard clipboard;
     private String fileName;
 
     //构造函数
-    public Notepad() {
+    public MainNotepadView() throws BadLocationException, FileNotFoundException {
         fileName = "无标题";
-        toolKit = Toolkit.getDefaultToolkit();
+        Toolkit toolKit = Toolkit.getDefaultToolkit();
         clipboard = toolKit.getSystemClipboard();
         textArea = new JTextArea();
-        js = new JScrollPane(textArea);//把文本区放到一个滚动窗格中
-        jp = new JPanel();
+        AutoCompleteUtils.setup(textArea, getItems());
+        JScrollPane js = new JScrollPane(textArea);//把文本区放到一个滚动窗格中
+        JPanel jp = new JPanel();
         openFileDialog = new FileDialog(this, "打开", FileDialog.LOAD);//加载
         saveFileDialog = new FileDialog(this, "另存为", FileDialog.SAVE);//保存
         js.setVerticalScrollBarPolicy//设置垂直滚动条
@@ -62,37 +44,37 @@ public class Notepad extends JFrame implements ActionListener {
         setBackground(Color.white);//背景颜色
         setSize(800, 600);//窗体的高度、宽度
         setJMenuBar(menuBar);//显示菜单
-        menuBar.add(file);
-        menuBar.add(edit);
-        menuBar.add(format);
-        menuBar.add(view);
-        menuBar.add(help);
+        menuBar.add(UIConstant.file);
+        menuBar.add(UIConstant.edit);
+        menuBar.add(UIConstant.format);
+        menuBar.add(UIConstant.view);
+        menuBar.add(UIConstant.help);
         //将menuItem中前4个菜单项放入菜单栏中的文件栏下
         for (int i = 0; i < 4; i++) {
-            file.add(menuItem[i]);
+            UIConstant.file.add(UIConstant.menuItem[i]);
         }
         //将menuItem中接下去7个菜单项放入菜单栏中的编辑栏下
         for (int i = 4; i < 10; i++) {
-            edit.add(menuItem[i]);
+            UIConstant.edit.add(UIConstant.menuItem[i]);
         }
-        format.add(menuItem[10]);//为格式栏添加自动换行项
+        UIConstant.format.add(UIConstant.menuItem[10]);//为格式栏添加自动换行项
         JMenu optionsMenu1 = new JMenu("字体");//字体项中还有选择项
-        format.add(optionsMenu1);//为格式栏添加字体项中的其它选择项
-        optionsMenu1.add(menuItem[12]);
-        optionsMenu1.add(menuItem[13]);
-        optionsMenu1.add(menuItem[14]);
+        UIConstant.format.add(optionsMenu1);//为格式栏添加字体项中的其它选择项
+        optionsMenu1.add(UIConstant.menuItem[12]);
+        optionsMenu1.add(UIConstant.menuItem[13]);
+        optionsMenu1.add(UIConstant.menuItem[14]);
         JMenu optionsMenu2 = new JMenu("字号");
-        format.add(optionsMenu2);//字号项中的选择项
-        optionsMenu2.add(menuItem[16]);
-        optionsMenu2.add(menuItem[17]);
-        optionsMenu2.add(menuItem[18]);
-        format.add(menuItem[19]);//为格式栏添加颜色项
-        format.add(menuItem[20]);//为格式栏添加背景项
-        view.add(menuItem[21]);//为查看栏添加状态栏项
-        help.add(menuItem[22]);//为帮助栏添加关于项
+        UIConstant.format.add(optionsMenu2);//字号项中的选择项
+        optionsMenu2.add(UIConstant.menuItem[16]);
+        optionsMenu2.add(UIConstant.menuItem[17]);
+        optionsMenu2.add(UIConstant.menuItem[18]);
+        UIConstant.format.add(UIConstant.menuItem[19]);//为格式栏添加颜色项
+        UIConstant.format.add(UIConstant.menuItem[20]);//为格式栏添加背景项
+        UIConstant.view.add(UIConstant.menuItem[21]);//为查看栏添加状态栏项
+        UIConstant.help.add(UIConstant.menuItem[22]);//为帮助栏添加关于项
         //给各个项增加监听功能
-        for (int i = 0; i < menuItem.length; i++) {
-            menuItem[i].addActionListener(this);
+        for (int i = 0; i < UIConstant.menuItem.length; i++) {
+            UIConstant.menuItem[i].addActionListener(this);
         }
     }
 
@@ -101,11 +83,11 @@ public class Notepad extends JFrame implements ActionListener {
     public void actionPerformed(ActionEvent e) {
         Object eventSource = e.getSource();
         /*新建*/
-        if (eventSource == menuItem[0]) {
+        if (eventSource == UIConstant.menuItem[0]) {
             textArea.setText("");
         }
         /*打开*/
-        else if (eventSource == menuItem[1]) {
+        else if (eventSource == UIConstant.menuItem[1]) {
             openFileDialog.setVisible(true);
             fileName = openFileDialog.getDirectory()
                     + openFileDialog.getFile();
@@ -114,7 +96,7 @@ public class Notepad extends JFrame implements ActionListener {
             }
         }
         /*保存*/
-        else if (eventSource == menuItem[2]) {
+        else if (eventSource == UIConstant.menuItem[2]) {
             saveFileDialog.setVisible(true);
             fileName = saveFileDialog.getDirectory()
                     + saveFileDialog.getFile();
@@ -123,21 +105,21 @@ public class Notepad extends JFrame implements ActionListener {
             }
         }
         /*退出*/
-        else if (eventSource == menuItem[3]) {
+        else if (eventSource == UIConstant.menuItem[3]) {
             System.exit(0);
         }
         /*全选*/
-        else if (eventSource == menuItem[4]) {
+        else if (eventSource == UIConstant.menuItem[4]) {
             textArea.selectAll();
         }
         /*复制*/
-        else if (eventSource == menuItem[5]) {
+        else if (eventSource == UIConstant.menuItem[5]) {
             String text = textArea.getSelectedText();
             StringSelection selection = new StringSelection(text);
             clipboard.setContents(selection, null);
         }
         /*剪切*/
-        else if (eventSource == menuItem[6]) {
+        else if (eventSource == UIConstant.menuItem[6]) {
             String text = textArea.getSelectedText();
             StringSelection selection = new StringSelection(text);
             clipboard.setContents(selection, null);
@@ -145,7 +127,7 @@ public class Notepad extends JFrame implements ActionListener {
                     textArea.getSelectionEnd());
         }
         /*粘贴*/
-        else if (eventSource == menuItem[7]) {
+        else if (eventSource == UIConstant.menuItem[7]) {
             Transferable contents = clipboard.getContents(this);
             if (contents == null) {
                 return;
@@ -161,15 +143,15 @@ public class Notepad extends JFrame implements ActionListener {
         }
 
         /*查找*/
-        else if (eventSource == menuItem[8]) {
+        else if (eventSource == UIConstant.menuItem[8]) {
             search();
         }
         /*替换*/
-        else if (eventSource == menuItem[9]) {
+        else if (eventSource == UIConstant.menuItem[9]) {
             replace();
         }
         /*自动换行*/
-        else if (eventSource == menuItem[10]) {
+        else if (eventSource == UIConstant.menuItem[10]) {
             if (textArea.getLineWrap()) {
                 textArea.setLineWrap(false);
             } else {
@@ -177,62 +159,62 @@ public class Notepad extends JFrame implements ActionListener {
             }
         }
         /*字体中的普通*/
-        else if (eventSource == menuItem[12]) {
+        else if (eventSource == UIConstant.menuItem[12]) {
             afile();
         }
         /*字体中的粗体*/
-        else if (eventSource == menuItem[13]) {
+        else if (eventSource == UIConstant.menuItem[13]) {
             bfile();
         }
         /*字体中的斜体*/
-        else if (eventSource == menuItem[14]) {
+        else if (eventSource == UIConstant.menuItem[14]) {
             cfile();
         }
         /*字体中的字号12*/
-        else if (eventSource == menuItem[16]) {
+        else if (eventSource == UIConstant.menuItem[16]) {
             Font font = textArea.getFont();
             int style = font.getStyle();
             textArea.setFont(new Font(font.getName(), style, 12));
         }
         /*字体中的字号24*/
-        else if (eventSource == menuItem[17]) {
+        else if (eventSource == UIConstant.menuItem[17]) {
             Font font = textArea.getFont();
             int style = font.getStyle();
             textArea.setFont(new Font(font.getName(), style, 24));
         }
         /*字体中的字号36*/
-        else if (eventSource == menuItem[18]) {
+        else if (eventSource == UIConstant.menuItem[18]) {
             Font font = textArea.getFont();
             int style = font.getStyle();
             textArea.setFont(new Font(font.getName(), style, 36));
         }
         /*颜色*/
-        else if (eventSource == menuItem[19]) {
+        else if (eventSource == UIConstant.menuItem[19]) {
             Color newColor = JColorChooser.showDialog(this, "颜色", textArea.getForeground());
             if (newColor != null) {
                 textArea.setForeground(newColor);
             }
         }
         /*背景*/
-        else if (eventSource == menuItem[20]) {
+        else if (eventSource == UIConstant.menuItem[20]) {
             Color newColor = JColorChooser.showDialog(this, "调色板", textArea.getBackground());
             if (newColor != null) {
                 textArea.setBackground(newColor);
             }
         }
         /*状态*/
-        else if (eventSource == menuItem[21]) {
+        else if (eventSource == UIConstant.menuItem[21]) {
             String view = "文本编辑器\n"
                     + "状态良好\n";
-            JOptionPane.showConfirmDialog(null, view, "状态",
+            JOptionPane.showConfirmDialog(null, UIConstant.view, "状态",
                     JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE);
         }
         /*关于*/
-        else if (eventSource == menuItem[22]) {
+        else if (eventSource == UIConstant.menuItem[22]) {
             String help = "文本编辑器\n"
                     + "制作者：Jack魏整理制作\n"
                     + "百度搜索：Jack魏";
-            JOptionPane.showConfirmDialog(null, help, "关于文件",
+            JOptionPane.showConfirmDialog(null, UIConstant.help, "关于文件",
                     JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE);
         }
     }
@@ -420,9 +402,21 @@ public class Notepad extends JFrame implements ActionListener {
         findDialog.setVisible(true);
     }
 
-    public static void main(String[] args) {
-        Notepad note = new Notepad();
-        note.setVisible(true);
+
+    /**
+     * 读取文件名 作为索引
+     */
+    public static ArrayList<String> getItems() throws FileNotFoundException {
+        ArrayList<String> ans = new ArrayList<>();
+        File file = new File("E:\\BaiduSyncdisk\\小说\\测试");
+        File[] files = file.listFiles();
+        if (files == null) {
+            throw new FileNotFoundException();
+        }
+        for (File tmpFile:files) {
+            ans.add(tmpFile.getName().replace(".txt", ""));
+        }
+        return ans;
     }
 }
 
