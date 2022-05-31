@@ -19,18 +19,14 @@ class StyledComboBoxUI<E> extends BasicComboBoxUI {
       protected Rectangle computePopupBounds(int px, int py, int pw, int ph) {
         //根据结果结算高度。
         ComboBoxModel model = comboBox.getModel();
-        int size = model.getSize();
+        int size = Math.min(model.getSize(), 16);
         int width = 1;
         for (int i=0; i<size; i++) {
           String elementAt = (String) model.getElementAt(i);
-          if (elementAt.length() > width ) {
-            width = elementAt.length();
-          }
+          width = Math.max(elementAt.length(), width);
         }
-
-        System.out.println("高度：" + this.comboBox.getPreferredSize().height);
         return super.computePopupBounds(
-            px,py,width * 16,size * 18
+            px,py,(width+1) * 16,size * 18
         );
       }
     };

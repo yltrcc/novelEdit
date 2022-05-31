@@ -60,6 +60,6 @@ public class TextUtils {
         if (separator == null) {
             separator = " ";
         }
-        return index;
+        return index == -1 ? text.length()-1 : index;
     }
 }
