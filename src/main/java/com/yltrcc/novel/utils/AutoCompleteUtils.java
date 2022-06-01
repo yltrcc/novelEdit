@@ -113,11 +113,11 @@ public class AutoCompleteUtils {
                         } catch (IOException exception) {
                             System.out.println(exception.getMessage());
                         }
+                        //TODO 还可以优化 前缀 可以采用字段树进行优化
                         if (strings != null && !strings.isEmpty()) {
                             for (String s : strings) {
                                 modelDetail.addElement(s);
                             }
-                            //设置坐标
 
                             int width = 1;
                             for (int i = 0; i < model.getSize(); i++) {
