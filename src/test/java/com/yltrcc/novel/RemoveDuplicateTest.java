@@ -4,18 +4,53 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class RemoveDuplicateTest {
 
-    public static void main(String[] args) throws IOException {
+    private static AtomicInteger atomicCount;
+
+    public static void main(String[] args) throws IOException, InterruptedException {
+        // 创建一个线程池:
+        ExecutorService es = new ThreadPoolExecutor(10, 100,
+                0L, TimeUnit.MILLISECONDS,
+                new LinkedBlockingQueue<Runnable>());
+        atomicCount = new AtomicInteger(0);
         ArrayList<String> items = getItems();
-        for (String s: items) {
-            HashSet<String> hset = readFile02("E:\\BaiduSyncdisk\\小说\\前缀测试\\" + s + ".txt");
-            writeFile01(hset.toArray(), "E:\\BaiduSyncdisk\\小说\\前缀测试\\" + s + ".txt");
+        int size = items.size();
+        //iterator遍历
+        Iterator<String> iterator = items.iterator();
+        while(iterator.hasNext()){
+            String next = iterator.next();
+            HashSet<String> hset = readFile02("E:\\BaiduSyncdisk\\小说\\前缀测试\\" + next + ".txt");
+            es.submit(new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        writeFile01(hset.toArray(), "E:\\BaiduSyncdisk\\小说\\前缀测试\\" + next + ".txt");
+                    } catch (IOException e) {
+                        System.out.println(e.getMessage());
+                    }
+                    atomicCount.addAndGet(1);
+                }
+            }));
+            iterator.remove();
         }
+        int countTmp = 0;
+        do {
+            if (atomicCount.get() != countTmp) {
+                countTmp = atomicCount.get();
+                System.out.println("当前进度为：" + countTmp * 1.0 / size * 100 + "%");
+            }
+            Thread.sleep(2000);
+        } while (countTmp != size);
+        // 关闭线程池:
+        es.shutdown();
     }
 
     /**
