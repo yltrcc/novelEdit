@@ -18,18 +18,20 @@ public class TextUtils {
         TextUtils.isActive = isActive;
     }
 
-    private static final String[] separators = {" ", "，", ",", "\"", "“", "\r\n", ".", "。"};
+    private static final String[] separators = {" ", "，", ",", "\"", "“", "\r\n", "\n", ".", "。"};
 
     //按行读取文本数据，然后按照 分割点进行拆分
     public static String getText(String text) {
-        getMaxIndex(text);
-        String[] res = text.split(separator);
-
-        if (res.length > 0) {
-            return res[res.length - 1];
-
+        int index = getMaxIndex(text);
+        if (index == -1) {
+            return text.substring(0);
+        }
+        if (index + 1 <= text.length() - 1) {
+            index += 1;
+            return text.substring(index);
         }else {
-            return "";
+            index = text.length();
+            return text.substring(index);
         }
     }
 
@@ -57,9 +59,6 @@ public class TextUtils {
                 separator = s;
             }
         }
-        if (separator == null) {
-            separator = " ";
-        }
-        return index == -1 ? text.length()-1 : index;
+        return index;
     }
 }

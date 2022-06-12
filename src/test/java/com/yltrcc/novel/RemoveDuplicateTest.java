@@ -13,8 +13,8 @@ public class RemoveDuplicateTest {
     public static void main(String[] args) throws IOException {
         ArrayList<String> items = getItems();
         for (String s: items) {
-            HashSet<String> hset = readFile02("E:\\BaiduSyncdisk\\小说\\测试\\" + s + ".txt");
-            writeFile01(hset.toArray(), "E:\\BaiduSyncdisk\\小说\\测试\\" + s + ".txt");
+            HashSet<String> hset = readFile02("E:\\BaiduSyncdisk\\小说\\前缀测试\\" + s + ".txt");
+            writeFile01(hset.toArray(), "E:\\BaiduSyncdisk\\小说\\前缀测试\\" + s + ".txt");
         }
     }
 
@@ -34,7 +34,7 @@ public class RemoveDuplicateTest {
         ) {
             String line = "";
             while ((line = br.readLine()) != null) {
-                hset.add(line);
+                hset.add(line.replaceAll("\n|\t",""));
             }
         }
         return hset;
@@ -45,7 +45,7 @@ public class RemoveDuplicateTest {
      */
     public static ArrayList<String> getItems() throws FileNotFoundException {
         ArrayList<String> ans = new ArrayList<>();
-        File file = new File("E:\\BaiduSyncdisk\\小说\\测试");
+        File file = new File("E:\\BaiduSyncdisk\\小说\\前缀测试");
         File[] files = file.listFiles();
         if (files == null) {
             throw new FileNotFoundException();
@@ -72,7 +72,7 @@ public class RemoveDuplicateTest {
         //BufferedWriter  bw=new BufferedWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(new File("E:/phsftp/evdokey/evdokey_201103221556.txt")), "UTF-8")));
 
         for (Object arr : arrs) {
-            bw.write(arr + "\t\n");
+            bw.write(arr + "\n");
         }
         bw.close();
         fw.close();

@@ -1,5 +1,7 @@
 package com.yltrcc.novel.custom;
 
+import com.yltrcc.novel.entity.HintEntity;
+
 import javax.swing.*;
 import javax.swing.plaf.basic.BasicComboBoxUI;
 import javax.swing.plaf.basic.BasicComboPopup;
@@ -22,7 +24,13 @@ class StyledComboBoxUI<E> extends BasicComboBoxUI {
         int size = Math.min(model.getSize(), 16);
         int width = 1;
         for (int i=0; i<size; i++) {
-          String elementAt = (String) model.getElementAt(i);
+          String elementAt = "";
+          if (model.getElementAt(i) instanceof String) {
+            elementAt = (String) model.getElementAt(i);
+          }
+          if (model.getElementAt(i) instanceof HintEntity) {
+            elementAt = (String) model.getElementAt(i).toString();
+          }
           width = Math.max(elementAt.length(), width);
         }
         return super.computePopupBounds(

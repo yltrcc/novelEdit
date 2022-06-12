@@ -408,7 +408,7 @@ public class MainNotepadView extends JFrame implements ActionListener {
      */
     public static ArrayList<String> getItems() throws FileNotFoundException {
         ArrayList<String> ans = new ArrayList<>();
-        File file = new File("E:\\BaiduSyncdisk\\小说\\测试");
+        File file = new File("E:\\BaiduSyncdisk\\小说\\前缀测试");
         File[] files = file.listFiles();
         if (files == null) {
             throw new FileNotFoundException();

@@ -1,6 +1,8 @@
 package com.yltrcc.novel.utils;
 
 import com.yltrcc.novel.custom.StyledComboBox;
+import com.yltrcc.novel.entity.HintEntity;
+import com.yltrcc.novel.test.Trie;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -19,15 +21,21 @@ public class AutoCompleteUtils {
 
     private static Rectangle rectangle;
 
+    private static Trie trie1 = null;
+
+    private static String s = null;
+
+    private static final Integer MAX_SHOW = 20;
+
     public static void setup(final JTextArea txtInput,
                              final ArrayList<String> items) throws BadLocationException {
         final DefaultComboBoxModel<Object> model = new DefaultComboBoxModel<>(items.toArray());
-        final DefaultComboBoxModel<Object> modelDetail = new DefaultComboBoxModel<>(items.toArray());
         final StyledComboBox<Object> cbInput = new StyledComboBox<Object>(model);
         setAdjusting(cbInput, false);
-
-        final StyledComboBox<Object> scbDetail = new StyledComboBox<Object>(modelDetail) ;
-
+        Trie trie = new Trie();
+        for (String s : items) {
+            trie.add(s);
+        }
         cbInput.setSelectedItem(null);
         cbInput.addActionListener(new ActionListener() {
             @Override
@@ -35,8 +43,9 @@ public class AutoCompleteUtils {
                 if (!isAdjusting(cbInput)) {
                     if (cbInput.getSelectedItem() != null) {
                         String text = txtInput.getText();
-                        text = TextUtils.joint(text, cbInput.getSelectedItem().toString());
-                        txtInput.setText(text);
+                        HintEntity selectedItem = (HintEntity) cbInput.getSelectedItem();
+                        txtInput.setText(text.substring(0, text.lastIndexOf(selectedItem.getOriginalStr()))
+                                + selectedItem.getReplaceStr());
                     }
                 }
             }
@@ -59,78 +68,27 @@ public class AutoCompleteUtils {
                     if (cbInput.isPopupVisible()) {
                         e.setSource(cbInput);
                         cbInput.dispatchEvent(e);
-                        scbDetail.setPopupVisible(false);
                         if (e.getKeyCode() == KeyEvent.VK_ENTER) {
                             //判断是换行还是选择关键字
                             String text = txtInput.getText();
                             if (cbInput.getSelectedItem() != null && isShow) {
-
-                                text = TextUtils.joint(text, cbInput.getSelectedItem().toString());
-                                txtInput.setText(text);
+                                String elementAt = "";
+                                if (cbInput.getSelectedItem() instanceof String) {
+                                    elementAt = (String) cbInput.getSelectedItem();
+                                }
+                                if (cbInput.getSelectedItem() instanceof HintEntity) {
+                                    elementAt = (String) cbInput.getSelectedItem().toString();
+                                }
+                                txtInput.setText(text.substring(0, text.lastIndexOf(s))
+                                        + elementAt);
                                 cbInput.setPopupVisible(false);
                                 isShow = false;
                             } else {
                                 //换行
                                 txtInput.setText(text + "\r\n");
                             }
-
                         }
                     }
-                    if (scbDetail.isPopupVisible()) {
-                        e.setSource(scbDetail);
-                        scbDetail.dispatchEvent(e);
-                        if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-                            //判断是换行还是选择关键字
-                            String text = txtInput.getText();
-                            if (scbDetail.getSelectedItem() != null) {
-                                text = TextUtils.joint(text, scbDetail.getSelectedItem().toString());
-                                txtInput.setText(text);
-                                scbDetail.setPopupVisible(false);
-                            } else {
-                                //换行
-                                txtInput.setText(text + "\r\n");
-                            }
-
-                        }
-                    }
-                }
-                //左右键
-                if (e.getKeyCode() == KeyEvent.VK_LEFT) {
-                    e.setSource(cbInput);
-                    cbInput.dispatchEvent(e);
-                    cbInput.setPopupVisible(true);
-                    scbDetail.setPopupVisible(false);
-                }
-                if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
-                    if (cbInput.isPopupVisible()) {
-                        e.setSource(scbDetail);
-                        scbDetail.dispatchEvent(e);
-                        modelDetail.removeAllElements();
-                        //读取数据
-                        List<String> strings = null;
-                        try {
-                            strings = FileUtils.readFile("E:\\BaiduSyncdisk\\小说\\测试\\" + cbInput.getSelectedItem() + ".txt");
-                        } catch (IOException exception) {
-                            System.out.println(exception.getMessage());
-                        }
-                        //TODO 还可以优化 前缀 可以采用字段树进行优化
-                        if (strings != null && !strings.isEmpty()) {
-                            for (String s : strings) {
-                                modelDetail.addElement(s);
-                            }
-
-                            int width = 1;
-                            for (int i = 0; i < model.getSize(); i++) {
-                                String elementAt = (String) model.getElementAt(i);
-                                width = Math.max(elementAt.length(), width);
-                            }
-                            rectangle.x += width * 16;
-                            scbDetail.setBounds(rectangle);
-                            scbDetail.setFocusable(true);
-                            scbDetail.setPopupVisible(true);
-                        }
-                    }
-
                 }
                 //ESC
                 if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
@@ -153,37 +111,127 @@ public class AutoCompleteUtils {
                 }
                 rectangle = r;
                 cbInput.setBounds(r);
-                updateList();
+                try {
+                    updateList();
+                } catch (IOException ex) {
+                    throw new RuntimeException(ex);
+                }
 
             }
+
             public void removeUpdate(DocumentEvent e) {
-            }
-            public void changedUpdate(DocumentEvent e) {
+                //获取光标位置
+                Rectangle r = null;
+                try {
+                    r = txtInput.modelToView(txtInput.getCaretPosition());
+                } catch (BadLocationException badLocationException) {
+                    r = new Rectangle();
+                }
+                rectangle = r;
+                cbInput.setBounds(r);
+                try {
+                    updateList();
+                } catch (IOException ex) {
+                    throw new RuntimeException(ex);
+                }
             }
 
-            private void updateList() {
+            public void changedUpdate(DocumentEvent e) {
+                cbInput.setPopupVisible(false);
+                isShow = false;
+            }
+
+            private void updateList() throws IOException {
                 setAdjusting(cbInput, true);
                 model.removeAllElements();
                 String input = txtInput.getText();
 
                 if (!input.isEmpty()) {
-                    for (String item : items) {
-                        //第一种智能判断
-                        String s = TextUtils.getText(input);
+                    //第一种智能判断
+                    s = TextUtils.getText(input);
+                    if (s.equals("")) {
+                        cbInput.setPopupVisible(false);
+                        isShow = false;
+                        setAdjusting(cbInput, false);
+                        return;
+                    }
+                    //s的长度为 1 的时候添加到字典树中
+                    if (s.length() <= 3) {
+                        List<String> wordsByPrefix = trie.getWordsByPrefix(s);
+                        int count = 0;
                         TextUtils.setIsActive(false);
-                        if (s.equals("")) {
-                            break;
+                        if (trie1 == null) {
+                            trie1 = new Trie();
                         }
-                        if (item.toLowerCase().startsWith(s.toLowerCase()) && !item.equalsIgnoreCase(s)) {
-                            model.addElement(item);
-                            TextUtils.setIsActive(true);
+                        if (trie1.size() > 0) {
+                            for (String str : trie1.getWordsByPrefix(s)) {
+                                if (count < MAX_SHOW) {
+                                    HintEntity hint = new HintEntity();
+                                    hint.setOriginalStr(s);
+                                    hint.setReplaceStr(str);
+                                    model.addElement(hint);
+                                    TextUtils.setIsActive(true);
+                                    count++;
+                                } else {
+                                    break;
+                                }
+                            }
                         }
-                        //第二种最近一位判断。
-                        String s1 = input.substring(input.length() - 1);
-                        if (!s.equals(s1) && item.toLowerCase().startsWith(s1.toLowerCase()) && !item.equalsIgnoreCase(s1)) {
-                            model.addElement(item);
+                        if (wordsByPrefix.size() > 0) {
+                            //两步 先展示 然后异步构建字典树
+                            if (count == 0) {
+                                List<String> strings = FileUtils.readFile("E:\\BaiduSyncdisk\\小说\\前缀测试\\" + wordsByPrefix.get(0) + ".txt");
+
+                                for (String str : strings) {
+                                    if (count < MAX_SHOW) {
+                                        HintEntity hint = new HintEntity();
+                                        hint.setOriginalStr(s);
+                                        hint.setReplaceStr(str);
+                                        model.addElement(hint);
+                                        TextUtils.setIsActive(true);
+                                        count++;
+                                    } else {
+                                        break;
+                                    }
+                                }
+                            }
+                            //异步构建字典树
+                            Thread t = new Thread(){
+                                @Override
+                                public void run() {
+                                    for (String item : wordsByPrefix) {
+                                        List<String> strings = new ArrayList<>();
+                                        try {
+                                            strings = FileUtils.readFile("E:\\BaiduSyncdisk\\小说\\前缀测试\\" + item + ".txt");
+                                        } catch (IOException e) {
+                                            System.out.println(e.getMessage());
+                                        }
+                                        if (strings.size() > 0) {
+                                            for (String str : strings) {
+                                                trie1.add(str);
+                                            }
+                                        }
+                                    }
+                                }
+                            };
+                            t.start();
+                        }
+                    } else {
+                        int count = 0;
+                        for (String str : trie1.getWordsByPrefix(s)) {
+                            if (count < MAX_SHOW) {
+                                HintEntity hint = new HintEntity();
+                                hint.setOriginalStr(s);
+                                hint.setReplaceStr(str);
+                                model.addElement(hint);
+                                TextUtils.setIsActive(true);
+                                count++;
+                            } else {
+                                break;
+                            }
                         }
                     }
+
                 }
                 if (model.getSize() > 0) {
                     cbInput.setPopupVisible(true);
@@ -199,7 +247,6 @@ public class AutoCompleteUtils {
         });
         txtInput.setLayout(new BorderLayout());
         txtInput.add(cbInput, BorderLayout.SOUTH);
-        txtInput.add(scbDetail, BorderLayout.SOUTH);
     }
 
     private static void setAdjusting(JComboBox<Object> cbInput, boolean adjusting) {

@@ -9,11 +9,10 @@ import java.nio.channels.FileLock;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.sql.SQLOutput;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.wltea.analyzer.core.IKSegmenter;
 
@@ -31,13 +30,15 @@ public class IKAnalyzerTest {
 
     static IKSegmenter ikSegmenter = new IKSegmenter(new StringReader(""), true);
 
-    public static void main(String[] args) throws IOException {
+    private static AtomicInteger atomicCount = null;
+
+    public static void main(String[] args) throws IOException, InterruptedException {
         // 创建一个线程池:
         ExecutorService es = new ThreadPoolExecutor(10, 100,
                 0L, TimeUnit.MILLISECONDS,
                 new LinkedBlockingQueue<Runnable>());
-
-        String basePath = "E:\\BaiduSyncdisk\\小说\\测试\\";
+        atomicCount  = new AtomicInteger(0);
+        String basePath = "E:\\BaiduSyncdisk\\小说\\前缀测试\\";
 
         List<String> list = readFile02();
         HashMap<String, List<String>> map = new HashMap<>();
@@ -45,23 +46,35 @@ public class IKAnalyzerTest {
         for (String s : list) {
             List<String> ans = getIkWords(s);
             for (String an : ans) {
+                String substring = s.substring(Math.max(s.indexOf(an), 0));
                 if (map.get(an) == null) {
                     List<String> tmp = new ArrayList<>();
-                    tmp.add(s);
+                    tmp.add(substring);
                     map.put(an, tmp);
                 }else {
                     List<String> value = map.get(an);
-                    value.add(s);
+                    value.add(substring);
                     map.put(an,value);
                 }
             }
             System.out.println("处理第" + ++count + "行位置数据");
         }
-        for (Map.Entry<String, List<String>> entry : map.entrySet()) {
-            //System.out.println("Key = " + entry.getKey() + ", Value = " + entry.getValue());
+        int size = map.size();
+        //iterator遍历
+        Iterator<Map.Entry<String, List<String>>> iterator = map.entrySet().iterator();
+        while(iterator.hasNext()){
+            Map.Entry<String, List<String>> entry = iterator.next();
             es.submit(new DownLoadThread(basePath + entry.getKey() + ".txt", entry.getValue()));
+            iterator.remove();
         }
-
+        int countTmp = 0;
+        do {
+            if (atomicCount.get() != countTmp) {
+                countTmp = atomicCount.get();
+                System.out.println("当前进度为：" + countTmp * 1.0 / size * 100 + "%");
+            }
+            Thread.sleep(2000);
+        } while (countTmp != size);
         // 关闭线程池:
         es.shutdown();
     }
@@ -109,7 +122,7 @@ public class IKAnalyzerTest {
                         flin = fcin.tryLock();
                         break;
                     } catch (Exception e) {
-                        //System.out.println("有其他线程正在操作该文件，当前线程休眠1000毫秒,当前线程名为：" + Thread.currentThread().getName());
+                        System.out.println("有其他线程正在操作该文件，当前线程休眠1000毫秒,当前线程名为：" + Thread.currentThread().getName());
                         Thread.sleep(1000);
                     }
                 }
@@ -125,6 +138,7 @@ public class IKAnalyzerTest {
             } catch (Exception e) {
                 e.printStackTrace();
             }
+            atomicCount.addAndGet(1);
         }
     }
 
